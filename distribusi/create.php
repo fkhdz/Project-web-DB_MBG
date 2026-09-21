@@ -1,270 +1,286 @@
 <?php
 // 1. Integrasi Koneksi Database
-include '../config/koneksi.php';
+include "../config/koneksi.php";
 
 // Fix variabel koneksi
 $koneksi_db = null;
-if (isset($conn)) {
-    $koneksi_db = $conn;
-} elseif (isset($koneksi)) {
-    $koneksi_db = $koneksi;
-}
+if (isset($conn)) $koneksi_db = $conn;
+elseif (isset($koneksi)) $koneksi_db = $koneksi;
 
 if (!$koneksi_db) {
-    die("Error: Variabel koneksi database tidak ditemukan.");
+    die("<div style='padding:2rem;'><h3 style='color:red;'>Koneksi Gagal!</h3></div>");
 }
 
-// 2. Logika Simpan Data
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// 2. Logika Simpan Data (Sesuaikan nama kolom dengan struktur tabel Anda)
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $paket_id = $_POST['paket_id'];
+    $penerima_id = $_POST['penerima_id'];
+    $mitra_id = $_POST['mitra_id'];
+    $tanggal_kirim = $_POST['tanggal_kirim'];
+    $tanggal_terima = $_POST['tanggal_terima'] ?: NULL;
+    $lokasi_pengiriman = $_POST['lokasi_pengiriman'];
+    $status_pengiriman = $_POST['status_pengiriman'];
+    // Untuk file bukti pengiriman, Anda perlu menambahkan logika upload file di sini
 
-    $paket_id       = $_POST['paket_id'];
-    $penerima_id    = $_POST['penerima_id'];
-    $mitra_id       = $_POST['mitra_id'];
-    $tanggal_kirim  = $_POST['tanggal_kirim'];
-    $tanggal_terima = $_POST['tanggal_terima'];
-    $lokasi         = $_POST['lokasi_pengiriman'];
-    $status         = $_POST['status_pengiriman'];
-    $catatan        = $_POST['catatan_petugas'];
-
-    // Logika Upload Foto
-    $bukti_nama = $_FILES['bukti_pengiriman']['name'];
-    $bukti_final = "";
-
-    if ($bukti_nama != "") {
-        $tmp = $_FILES['bukti_pengiriman']['tmp_name'];
-        $folder = "../uploads/";
-        
-        // Pastikan folder ada
-        if (!is_dir($folder)) {
-            mkdir($folder, 0777, true);
-        }
-
-        $nama_baru = time() . "_" . $bukti_nama; 
-        if(move_uploaded_file($tmp, $folder . $nama_baru)){
-            $bukti_final = $nama_baru;
-        }
-    }
-
-    $query = "INSERT INTO DISTRIBUSI 
-                (paket_id, penerima_id, mitra_id, tanggal_kirim, tanggal_terima, 
-                 lokasi_pengiriman, status_pengiriman, bukti_pengiriman, catatan_petugas)
-              VALUES 
-                ('$paket_id', '$penerima_id', '$mitra_id', '$tanggal_kirim', '$tanggal_terima',
-                 '$lokasi', '$status', '$bukti_final', '$catatan')";
-
-    if (mysqli_query($koneksi_db, $query)) {
-        echo "<script>alert('Data distribusi berhasil ditambahkan'); window.location='index.php';</script>";
-        exit;
+    // Contoh Query Insert (Sesuaikan dengan nama tabel dan kolom di database Anda)
+    $query_insert = "INSERT INTO DISTRIBUSI (paket_id, penerima_id, mitra_id, tanggal_kirim, tanggal_terima, lokasi_pengiriman, status_pengiriman) 
+                     VALUES ('$paket_id', '$penerima_id', '$mitra_id', '$tanggal_kirim', " . ($tanggal_terima ? "'$tanggal_terima'" : "NULL") . ", '$lokasi_pengiriman', '$status_pengiriman')";
+    
+    if (mysqli_query($koneksi_db, $query_insert)) {
+        header("Location: index.php?msg=created");
+        exit();
     } else {
-        echo "<script>alert('Gagal tambah data: " . mysqli_error($koneksi_db) . "');</script>";
+        $error_msg = "Gagal menambahkan data: " . mysqli_error($koneksi_db);
     }
 }
 ?>
 
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="light" lang="id">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Tambah Distribusi</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
-<script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "primary": "#137fec",
-            "background-light": "#f6f7f8",
-            "background-dark": "#101922",
-          },
-          fontFamily: {
-            "display": ["Inter", "sans-serif"]
-          },
-          borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
-        },
-      },
-    }
-</script>
-<style>
-    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-</style>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Tambah Distribusi - MBG Workspace</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ["Inter", "sans-serif"] },
+                    colors: {
+                        primary: { 50: '#f0f9ff', 100: '#e0f2fe', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1' },
+                        surface: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-background-light dark:bg-background-dark font-display">
-<div class="relative flex min-h-screen w-full">
+<body class="font-sans bg-surface text-slate-800 antialiased selection:bg-primary-100 selection:text-primary-700">
 
-<div class="flex-shrink-0 w-64 bg-white dark:bg-background-dark border-r border-gray-200 dark:border-gray-800 flex flex-col hidden lg:flex">
-    <div class="flex flex-col flex-1 p-4 justify-between">
-        <div class="flex flex-col gap-4">
-            <div class="flex items-center gap-3">
-                <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10" data-alt="Admin user avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAsGJZc1kciEJL3XHhdEFPtu4-8hOiyPFywKFskA-qF2YFAivujmellxJFHWmNRjmCCR39a5Jmm0q3ub6682h2sZW96ia-_UoogkN_ExuLlmtbGeaCTc0hIlIrenjBPRji4DR4m8e1BPfpbebZIX_A7B1e6Sv7BYDtb2WejfDzEFvhqrhd6klCf-atyIHzS8jMxEKcnk-a0DNsBI0-bCU4dyqY6mdKmi3X_oCbEYCbKawqf4Vma9E7BnobFNjDuaBfo3irL-vuzzWjL");'></div>
+<div class="flex min-h-screen w-full">
+
+    <!-- SIDEBAR TEMA BARU (Sama dengan halaman index lainnya) -->
+    <aside class="flex flex-col w-64 bg-white border-r border-slate-100 p-4 shrink-0 hidden lg:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
+        <div class="flex flex-col h-full">
+            <!-- Profil Admin -->
+            <div class="flex items-center gap-3 px-3 py-4 mb-4 border-b border-slate-100">
+                <div class="size-10 rounded-full ring-2 ring-slate-100 shadow-sm bg-cover bg-center" style="background-image: url('https://ui-avatars.com/api/?name=Admin+MBG&background=0ea5e9&color=fff');"></div>
                 <div class="flex flex-col">
-                    <h1 class="text-[#111418] dark:text-white text-base font-medium">Administrator</h1>
-                    <p class="text-[#617589] dark:text-gray-400 text-sm">admin@portal.com</p>
+                    <h1 class="text-slate-900 text-sm font-bold leading-tight">Administrator</h1>
+                    <p class="text-slate-500 text-xs mt-0.5">admin@portal.com</p>
                 </div>
             </div>
-            <nav class="flex flex-col gap-2 mt-4">
-                <a class="flex items-center gap-3 px-3 py-2 rounded text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" href="../index.php">
-                    <span class="material-symbols-outlined">dashboard</span>
+
+            <!-- Navigasi -->
+            <nav class="flex flex-col gap-1.5 flex-grow">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../index.php">
+                    <span class="material-symbols-outlined text-[22px]">dashboard</span>
                     <p class="text-sm font-medium">Dashboard</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2 rounded text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" href="../mitra/index.php">
-                    <span class="material-symbols-outlined">handshake</span>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../mitra/index.php">
+                    <span class="material-symbols-outlined text-[22px]">handshake</span>
                     <p class="text-sm font-medium">Mitra</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2 rounded text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" href="../user/index.php">
-                    <span class="material-symbols-outlined">group</span>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../user/index.php">
+                    <span class="material-symbols-outlined text-[22px]">person</span>
                     <p class="text-sm font-medium">Pengguna</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2 rounded text-[#617589] dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800" href="../penerima/index.php">
-                    <span class="material-symbols-outlined">verified_user</span>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../penerima/index.php">
+                    <span class="material-symbols-outlined text-[22px]">groups</span>
                     <p class="text-sm font-medium">Penerima</p>
                 </a>
-                <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary" href="index.php">
-                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
-                    <p class="text-sm font-medium">Distribusi</p>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../paketbantuan/index.php">
+                    <span class="material-symbols-outlined text-[22px]">inventory_2</span>
+                    <p class="text-sm font-medium">Paket Bantuan</p>
+                </a>
+                <!-- Menu Distribusi Aktif -->
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary-50 text-primary-600 transition-colors" href="index.php">
+                    <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+                    <p class="text-sm font-semibold">Distribusi</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../laporandata/index.php">
+                    <span class="material-symbols-outlined text-[22px]">analytics</span>
+                    <p class="text-sm font-medium">Laporan Data</p>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-colors" href="../item/index.php">
+                    <span class="material-symbols-outlined text-[22px]">warehouse</span>
+                    <p class="text-sm font-medium">Gudang Item</p>
                 </a>
             </nav>
+
+            <button class="flex items-center justify-center gap-2 rounded-xl h-11 px-4 bg-slate-50 text-slate-600 hover:bg-red-50 hover:text-red-600 text-sm font-semibold transition-colors border border-slate-100">
+                <span class="material-symbols-outlined text-[20px]">logout</span> Keluar
+            </button>
         </div>
-    </div>
-</div>
+    </aside>
 
-<main class="flex-1 p-8 overflow-y-auto">
-<div class="max-w-4xl mx-auto">
-    <div class="flex flex-wrap gap-2 mb-6">
-        <a class="text-[#617589] dark:text-gray-400 text-base font-medium hover:text-primary" href="index.php">Distribusi</a>
-        <span class="text-[#617589] dark:text-gray-400 text-base font-medium">/</span>
-        <span class="text-[#111418] dark:text-white text-base font-medium">Tambah Distribusi</span>
-    </div>
-
-    <div class="flex flex-wrap justify-between gap-3 mb-8">
-        <div class="flex min-w-72 flex-col gap-2">
-            <h1 class="text-[#111418] dark:text-white text-4xl font-black tracking-tight">Tambah Distribusi</h1>
-            <p class="text-[#617589] dark:text-gray-400 text-base font-normal">Lengkapi detail di bawah ini untuk menambahkan data distribusi baru.</p>
-        </div>
-    </div>
-
-    <div class="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
+    <!-- KONTEN UTAMA -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
         
-        <form method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+        <header class="lg:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-slate-100">
+            <h1 class="text-lg font-bold text-slate-900">MBG Workspace</h1>
+            <span class="material-symbols-outlined">menu</span>
+        </header>
+
+        <div class="flex-1 p-6 lg:p-10 max-w-4xl mx-auto w-full">
             
-            <div class="md:col-span-2">
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Paket Bantuan</p>
-                    <select name="paket_id" class="form-select w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 text-base px-4" required>
-                        <option value="">-- Pilih Paket --</option>
-                        <?php
-                        $paket = mysqli_query($koneksi_db, "SELECT * FROM PAKETBANTUAN");
-                        while ($p = mysqli_fetch_assoc($paket)) {
-                            echo "<option value='{$p['paket_id']}'>{$p['nama_paket']} (Stok: {$p['kuantitas']})</option>";
-                        }
-                        ?>
-                    </select>
-                </label>
+            <!-- Breadcrumb -->
+            <div class="flex items-center gap-2 mb-2">
+                <a class="text-slate-400 text-sm font-medium hover:text-primary-600 transition-colors" href="index.php">Distribusi</a>
+                <span class="text-slate-300 text-sm">/</span>
+                <span class="text-slate-600 text-sm font-medium">Tambah Distribusi</span>
             </div>
 
-            <div>
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Penerima</p>
-                    <select name="penerima_id" class="form-select w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 text-base px-4" required>
-                        <option value="">-- Pilih Penerima --</option>
-                        <?php
-                        $penerima = mysqli_query($koneksi_db, "SELECT * FROM PENERIMA");
-                        while ($pr = mysqli_fetch_assoc($penerima)) {
-                            echo "<option value='{$pr['penerima_id']}'>{$pr['nama_lengkap']}</option>";
-                        }
-                        ?>
-                    </select>
-                </label>
+            <!-- Page Header -->
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-900 tracking-tight">Tambah Distribusi</h2>
+                <p class="text-slate-500 mt-1.5 text-sm">Lengkapi detail di bawah ini untuk menambahkan data pengiriman bantuan baru.</p>
             </div>
 
-            <div>
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Mitra</p>
-                    <select name="mitra_id" class="form-select w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 text-base px-4" required>
-                        <option value="">-- Pilih Mitra --</option>
-                        <?php
-                        $mitra = mysqli_query($koneksi_db, "SELECT * FROM MITRA");
-                        while ($m = mysqli_fetch_assoc($mitra)) {
-                            echo "<option value='{$m['mitra_id']}'>{$m['nama_mitra']}</option>";
-                        }
-                        ?>
-                    </select>
-                </label>
-            </div>
+            <?php if(isset($error_msg)): ?>
+                <div class="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border border-red-100/50 shadow-sm flex items-center gap-3">
+                    <span class="material-symbols-outlined text-red-500">error</span>
+                    <p class="text-sm font-semibold"><?= $error_msg ?></p>
+                </div>
+            <?php endif; ?>
 
-            <div>
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Tanggal Kirim</p>
-                    <input type="date" name="tanggal_kirim" class="form-input w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 px-4 text-base" />
-                </label>
-            </div>
-
-            <div>
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Tanggal Terima</p>
-                    <input type="date" name="tanggal_terima" class="form-input w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 px-4 text-base" />
-                </label>
-            </div>
-
-            <div class="md:col-span-2">
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Lokasi Pengiriman</p>
-                    <input type="text" name="lokasi_pengiriman" class="form-input w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 px-4 text-base" placeholder="Masukkan alamat lengkap" />
-                </label>
-            </div>
-
-            <div class="md:col-span-2">
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Status Pengiriman</p>
-                    <select name="status_pengiriman" class="form-select w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-12 text-base px-4" required>
-                        <option value="Dikemas">Dikemas</option>
-                        <option value="Dikirim">Dikirim</option>
-                        <option value="Diterima">Diterima</option>
-                        <option value="Selesai">Selesai</option>
-                        <option value="Gagal">Gagal</option>
-                    </select>
-                </label>
-            </div>
-
-            <div class="md:col-span-2">
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Bukti Pengiriman</p>
-                    <div class="flex justify-center items-center w-full">
-                        <label class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 dark:border-gray-700 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                <span class="material-symbols-outlined text-4xl text-gray-500 dark:text-gray-400">cloud_upload</span>
-                                <p class="mb-2 text-sm text-gray-500 dark:text-gray-400"><span class="font-semibold">Klik untuk upload</span></p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">PNG, JPG or JPEG</p>
+            <!-- Form Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8">
+                <form action="" method="POST" enctype="multipart/form-data">
+                    <div class="space-y-6">
+                        
+                        <!-- Pilihan Paket -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Paket Bantuan</label>
+                            <div class="relative">
+                                <select name="paket_id" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer">
+                                    <option value="">-- Pilih Paket --</option>
+                                    <?php
+                                    $paket_q = mysqli_query($koneksi_db, "SELECT * FROM PAKETBANTUAN");
+                                    while($p = mysqli_fetch_assoc($paket_q)){
+                                        echo "<option value='{$p['paket_id']}'>{$p['nama_paket']} - {$p['jenis_bantuan']}</option>";
+                                    }
+                                    ?>
+                                </select>
+                                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
                             </div>
-                            <input name="bukti_pengiriman" type="file" class="hidden" accept="image/*" />
-                        </label>
+                        </div>
+
+                        <!-- Baris: Penerima & Mitra -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Penerima</label>
+                                <div class="relative">
+                                    <select name="penerima_id" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer">
+                                        <option value="">-- Pilih Penerima --</option>
+                                        <?php
+                                        $penerima_q = mysqli_query($koneksi_db, "SELECT * FROM PENERIMA");
+                                        while($r = mysqli_fetch_assoc($penerima_q)){
+                                            echo "<option value='{$r['penerima_id']}'>{$r['nama_lengkap']} ({$r['kategori_penerima']})</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Mitra Penyalur</label>
+                                <div class="relative">
+                                    <select name="mitra_id" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer">
+                                        <option value="">-- Pilih Mitra --</option>
+                                        <?php
+                                        $mitra_q = mysqli_query($koneksi_db, "SELECT * FROM MITRA");
+                                        while($m = mysqli_fetch_assoc($mitra_q)){
+                                            echo "<option value='{$m['mitra_id']}'>{$m['nama_mitra']}</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Baris: Tanggal Kirim & Terima -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Tanggal Kirim</label>
+                                <input type="date" name="tanggal_kirim" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"/>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-2">Tanggal Terima <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                                <input type="date" name="tanggal_terima" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"/>
+                            </div>
+                        </div>
+
+                        <!-- Lokasi Pengiriman -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Lokasi Pengiriman</label>
+                            <input type="text" name="lokasi_pengiriman" required placeholder="Masukkan alamat lengkap pengiriman" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all placeholder:text-slate-400"/>
+                        </div>
+
+                        <!-- Status Pengiriman -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Status Pengiriman</label>
+                            <div class="relative">
+                                <select name="status_pengiriman" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none cursor-pointer">
+                                    <option value="Dikemas">Dikemas</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Proses">Dalam Proses</option>
+                                    <option value="Dikirim">Dikirim</option>
+                                    <option value="Terkirim">Terkirim</option>
+                                    <option value="Selesai">Selesai</option>
+                                    <option value="Gagal">Gagal</option>
+                                </select>
+                                <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                            </div>
+                        </div>
+
+                        <!-- Bukti Pengiriman -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Bukti Pengiriman <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <div class="space-y-1 text-center">
+                                    <span class="material-symbols-outlined text-4xl text-slate-400 mb-2">cloud_upload</span>
+                                    <div class="flex text-sm text-slate-600 justify-center">
+                                        <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-primary-600 hover:text-primary-500 focus-within:outline-none px-2 py-0.5 shadow-sm ring-1 ring-slate-200">
+                                            <span>Unggah file</span>
+                                            <input id="file-upload" name="bukti_pengiriman" type="file" class="sr-only">
+                                        </label>
+                                        <p class="pl-1">atau seret dan lepas</p>
+                                    </div>
+                                    <p class="text-xs text-slate-500">PNG, JPG, PDF hingga 5MB</p>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                </label>
+
+                    <!-- Tombol Aksi -->
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-end gap-3">
+                        <a href="index.php" class="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-sm">Batal</a>
+                        <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-xl hover:bg-primary-700 transition-colors shadow-sm flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">save</span> Simpan Distribusi
+                        </button>
+                    </div>
+                </form>
             </div>
 
-            <div class="md:col-span-2">
-                <label class="flex flex-col">
-                    <p class="text-[#111418] dark:text-gray-200 text-sm font-medium pb-2">Catatan Petugas</p>
-                    <textarea name="catatan_petugas" class="form-textarea w-full rounded text-[#111418] dark:text-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:border-primary h-24 px-4 py-3 text-base" placeholder="Tambahkan catatan..."></textarea>
-                </label>
-            </div>
-
-            <div class="md:col-span-2 flex justify-end gap-4 mt-4">
-                <a href="index.php" class="px-6 py-3 rounded-lg text-sm font-semibold bg-gray-200 dark:bg-gray-700 text-[#111418] dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                    Kembali
-                </a>
-                <button type="submit" class="px-6 py-3 rounded-lg text-sm font-semibold bg-primary text-white hover:bg-blue-600 transition-colors">
-                    Simpan Data
-                </button>
-            </div>
-
-        </form>
         </div>
+    </main>
 </div>
-</main>
-</div>
+
+<script>
+    // Script interaktif sederhana untuk menampilkan nama file yang diunggah
+    document.getElementById('file-upload').addEventListener('change', function(e) {
+        var fileName = e.target.files[0].name;
+        var label = this.nextElementSibling;
+        label.innerText = fileName;
+        label.classList.add('text-primary-600', 'font-semibold');
+    });
+</script>
+
 </body>
 </html>
