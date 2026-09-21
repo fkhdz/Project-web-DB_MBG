@@ -1,4 +1,3 @@
-<!-- File: MBG-database-project/sidebar.php -->
 <aside class="flex flex-col w-64 bg-white border-r border-slate-100 p-4 shrink-0 hidden lg:flex shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10">
     <div class="flex flex-col h-full">
         <div class="flex items-center gap-3 px-3 py-4 mb-4 border-b border-slate-100">
@@ -10,7 +9,6 @@
         </div>
 
         <nav class="flex flex-col gap-1.5 flex-grow">
-            <!-- Gunakan variabel $current_page yang didefinisikan di setiap file untuk menyorot menu yang aktif -->
             <a class="flex items-center gap-3 px-3 py-2.5 rounded-xl <?= ($current_page == 'dashboard') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900' ?> transition-colors" href="../index.php">
                 <span class="material-symbols-outlined text-[22px]">dashboard</span> <p class="text-sm">Dashboard</p>
             </a>
